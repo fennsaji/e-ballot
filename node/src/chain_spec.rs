@@ -7,6 +7,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use pallet_aadhaar::types::AadhaarId;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -59,6 +60,12 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 				],
+				vec![
+					(*b"0000000000000000", get_account_id_from_seed::<sr25519::Public>("Alice")),
+					(*b"1111111111111111", get_account_id_from_seed::<sr25519::Public>("Bob")),
+					(*b"6666666666666666", get_account_id_from_seed::<sr25519::Public>("Alice//stash")),
+					(*b"7777777777777777", get_account_id_from_seed::<sr25519::Public>("Bob//stash")),
+				],
 				true,
 			)
 		},
@@ -104,8 +111,18 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+				],
+				vec![
+					(*b"0000000000000000", get_account_id_from_seed::<sr25519::Public>("Alice")),
+					(*b"1111111111111111", get_account_id_from_seed::<sr25519::Public>("Bob")),
+					(*b"2222222222222222", get_account_id_from_seed::<sr25519::Public>("Charlie")),
+					(*b"3333333333333333", get_account_id_from_seed::<sr25519::Public>("Dave")),
+					(*b"4444444444444444", get_account_id_from_seed::<sr25519::Public>("Eve")),
+					(*b"5555555555555555", get_account_id_from_seed::<sr25519::Public>("Ferdie")),
+					(*b"6666666666666666", get_account_id_from_seed::<sr25519::Public>("Alice//stash")),
+					(*b"7777777777777777", get_account_id_from_seed::<sr25519::Public>("Bob//stash")),
+					(*b"8888888888888888", get_account_id_from_seed::<sr25519::Public>("Charlie//stash")),
+					(*b"9999999999999999", get_account_id_from_seed::<sr25519::Public>("Dave//stash")),
 				],
 				true,
 			)
@@ -130,6 +147,7 @@ fn testnet_genesis(
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
+	initial_aadhaars: Vec<(AadhaarId, AccountId)>,
 	_enable_println: bool,
 ) -> GenesisConfig {
 	GenesisConfig {
@@ -153,7 +171,7 @@ fn testnet_genesis(
 		},
 		transaction_payment: Default::default(),
 		aadhaar: AadhaarConfig {
-			initial_aadhaars: vec![(*b"1234567897654321", endowed_accounts[0].clone())],
+			initial_aadhaars,
 			phantom: Default::default(),
 		}
 	}
