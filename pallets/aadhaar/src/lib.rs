@@ -4,6 +4,22 @@ pub mod types;
 
 pub use pallet::*;
 
+use frame_support::{
+	weights::DispatchInfo, traits::GetCallMetadata,
+    codec::{ Decode, Encode, MaxEncodedLen },
+};
+use sp_runtime::{
+	traits::{ DispatchInfoOf, Dispatchable, SignedExtension },
+	transaction_validity::{
+		InvalidTransaction, TransactionLongevity, TransactionPriority, TransactionValidity, 
+		TransactionValidityError, ValidTransaction,
+	},
+};
+use sp_std::prelude::*;
+use sp_std::fmt::Debug;
+use scale_info::TypeInfo;
+use sp_std::marker::PhantomData;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
@@ -177,5 +193,71 @@ pub mod pallet {
 			Ok(())
 		}
 
+	}
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, Default, TypeInfo, MaxEncodedLen)]
+pub struct CheckAccess<T: Config + Send + Sync>(PhantomData<T>);
+
+impl<T: Config + Send + Sync> CheckAccess<T> {
+	pub fn new() -> Self {
+		Self(PhantomData)
+	}
+}
+
+/// Debug impl for the `CheckAccess` struct.
+impl<T: Config + Send + Sync> Debug for CheckAccess<T> {
+	#[cfg(feature = "std")]
+	fn fmt(&self, f: &mut sp_std::fmt::Formatter) -> sp_std::fmt::Result {
+		write!(f, "AllowAccount")
+	}
+
+	#[cfg(not(feature = "std"))]
+	fn fmt(&self, _: &mut sp_std::fmt::Formatter) -> sp_std::fmt::Result {
+		Ok(())
+	}
+}
+
+impl<T: Config + Send + Sync + scale_info::TypeInfo> SignedExtension for CheckAccess<T>
+	where
+	T::Call: Dispatchable<Info = DispatchInfo> + GetCallMetadata,
+	{
+	type AccountId = T::AccountId;
+	type Call = T::Call;
+	type AdditionalSigned = ();
+	type Pre = ();
+	const IDENTIFIER: &'static str = "AllowAccount";
+
+	fn additional_signed(&self) -> sp_std::result::Result<(), TransactionValidityError> {
+		Ok(())
+	}
+
+	fn validate(
+		&self,
+		who: &Self::AccountId,
+		_call: &Self::Call,
+		info: &DispatchInfoOf<Self::Call>,
+		_len: usize,
+	) -> TransactionValidity {
+		if RLookup::<T>::contains_key(who){
+			Ok(ValidTransaction {
+				priority: info.weight as TransactionPriority,
+				longevity: TransactionLongevity::max_value(),
+				propagate: true,
+				..Default::default()
+			})
+		} else {
+			Err(InvalidTransaction::Custom(230).into())
+		}
+	}
+
+	fn pre_dispatch(
+		self,
+		_who: &Self::AccountId,
+		_call: &Self::Call,
+		_info: &DispatchInfoOf<Self::Call>,
+		_len: usize,
+	) -> Result<Self::Pre, TransactionValidityError> {
+		Ok(())
 	}
 }

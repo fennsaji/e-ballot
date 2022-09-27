@@ -1,7 +1,5 @@
-use frame_support::{
-    codec::{ Decode, Encode, MaxEncodedLen },
-};
-use scale_info::TypeInfo;
+use super::*;
+
 use sp_core::sr25519;
 
 pub type PublicKey = sr25519::Public;
