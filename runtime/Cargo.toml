@@ -49,7 +49,7 @@ frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, g
 hex-literal = { version = "0.3.4", optional = true }
 
 # Local Dependencies
-pallet-identity = { version = "0.1.0", default-features = false, path = "../pallets/identity" }
+pallet-aadhaar = { version = "0.1.0", default-features = false, path = "../pallets/aadhaar" }
 pallet-ballot = { version = "0.1.0", default-features = false, path = "../pallets/ballot" }
 
 [build-dependencies]

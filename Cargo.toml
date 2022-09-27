@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "node",
-    "pallets/identity",
+    "pallets/aadhaar",
     "pallets/ballot",
     "runtime",
 ]

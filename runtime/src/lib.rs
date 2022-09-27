@@ -35,7 +35,7 @@ pub use frame_support::{
 	},
 	StorageValue,
 };
-pub use frame_system::Call as SystemCall;
+pub use frame_system::{Call as SystemCall, EnsureRoot};
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::CurrencyAdapter;
@@ -44,7 +44,7 @@ pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
 /// Import the template pallet.
-pub use pallet_identity;
+pub use pallet_aadhaar;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -266,8 +266,9 @@ impl pallet_sudo::Config for Runtime {
 }
 
 /// Configure the pallet-template in pallets/template.
-impl pallet_identity::Config for Runtime {
+impl pallet_aadhaar::Config for Runtime {
 	type Event = Event;
+	type RegisterOrigin = EnsureRoot<AccountId>;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -287,7 +288,7 @@ construct_runtime!(
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
 		// Include the custom logic from the pallet-template in the runtime.
-		Identity: pallet_identity,
+		Aadhaar: pallet_aadhaar,
 	}
 );
 
@@ -332,7 +333,7 @@ mod benches {
 		[frame_system, SystemBench::<Runtime>]
 		[pallet_balances, Balances]
 		[pallet_timestamp, Timestamp]
-		[pallet_identity, Identity]
+		[pallet_aadhaar, Aadhaar]
 	);
 }
 
