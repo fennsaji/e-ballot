@@ -100,6 +100,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
+		/// Add user and register aadhaar
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn register_aadhaar(
 			origin: OriginFor<T>,
@@ -155,6 +156,7 @@ pub mod pallet {
 			}
 		}
 
+		/// Registers user and stores aadhaar
 		pub fn do_register_aadhaar(
 			account_id: &T::AccountId,
 			aadhaar_id: AadhaarId,
@@ -193,6 +195,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Check if given account has registered aadhaar
 		pub fn does_aadhaar_exists(account_id: &T::AccountId) -> bool {
 			match Self::get_aadhaar_id(account_id) {
 				Some(_) => true,
@@ -200,6 +203,7 @@ pub mod pallet {
 			}
 		}
 		
+		/// Get aadhaar id from account id
 		pub fn get_aadhaar_id(account_id: &T::AccountId) -> Option<AadhaarId> {
 			RLookup::<T>::get(account_id)
 		}
@@ -228,6 +232,9 @@ impl<T: Config + Send + Sync> Debug for CheckAccess<T> {
 	}
 }
 
+
+/// Checks if the caller has aadhaar registered on the blockchain
+/// This ensures that only users with aadhaar registered can call extrinsics and vote
 impl<T: Config + Send + Sync + scale_info::TypeInfo> SignedExtension for CheckAccess<T>
 	where
 	T::Call: Dispatchable<Info = DispatchInfo> + GetCallMetadata,

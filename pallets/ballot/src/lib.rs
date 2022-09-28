@@ -90,6 +90,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
+		/// Start a voting session
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn start_voting(origin: OriginFor<T>) -> DispatchResult {
 			// Check if origin is a from a validator
@@ -102,6 +103,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Stop a voting session. After winner can be chosen based on no of votes on candidates
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn stop_voting(origin: OriginFor<T>, vote_index: VoteIndex) -> DispatchResult {
 			// Check if origin is a from a validator
@@ -114,6 +116,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Remove voting data
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn reset_voting(origin: OriginFor<T>, vote_index: VoteIndex) -> DispatchResult {
 			// Check if origin is a from a validator
@@ -127,6 +130,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Add candidates to voting session
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn add_candidates(origin: OriginFor<T>, vote_index: VoteIndex, candidates: Vec<T::AccountId>) -> DispatchResult {
 			// Check if origin is a from a validator
@@ -140,6 +144,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Vote on session by aadhaar registered users
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn vote(origin: OriginFor<T>, vote_index: VoteIndex, candidate: AadhaarId) -> DispatchResult {
 			// Check if origin is a from a validator
@@ -194,6 +199,7 @@ pub mod pallet {
 			Ok((aadhaar_id, vote_index))
 		}
 
+		/// Add candidates for voting session
 		pub fn do_add_candidates(vote_index: VoteIndex, candidates: &Vec<T::AccountId>) -> DispatchResult {
 			// Add candidates to the storage
 			candidates.into_iter().for_each(|candidate| {
@@ -209,6 +215,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+		/// Vote on candidate
 		pub fn do_vote(voter_acc: &T::AccountId, vote_index: VoteIndex, candidate_id: AadhaarId) -> DispatchResult {
 			let voter_id = AadhaarPallet::<T>::get_aadhaar_id(&voter_acc).unwrap();
 
