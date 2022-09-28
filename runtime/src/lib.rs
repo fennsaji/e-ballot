@@ -27,7 +27,7 @@ use sp_version::RuntimeVersion;
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
-		ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness, StorageInfo,
+		ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness, StorageInfo, EitherOfDiverse,
 	},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
@@ -42,6 +42,7 @@ use pallet_transaction_payment::CurrencyAdapter;
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
+use pallet_collective::EnsureMember;
 
 /// Import the template pallet.
 pub use pallet_aadhaar;
@@ -265,11 +266,38 @@ impl pallet_sudo::Config for Runtime {
 	type Call = Call;
 }
 
+
+pub type EnsureRootOrHalfAkshayaCouncil = EitherOfDiverse<
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionMoreThan<AccountId, AkshayaCouncilCollective, 1, 2>,
+>;
+
+use pallet_collective::Instance1 as AkshayaCouncilCollective;
+
+parameter_types! {
+	pub const AkshayaCouncilMotionDuration: BlockNumber = 5 * DAYS;
+	pub const AkshayaCouncilMaxProposals: u32 = 100;
+	pub const AkshayaCouncilMaxMembers: u32 = 100;
+}
+
+impl pallet_collective::Config<AkshayaCouncilCollective> for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+	type MotionDuration = AkshayaCouncilMotionDuration;
+	type MaxProposals = AkshayaCouncilMaxProposals;
+	type MaxMembers = AkshayaCouncilMaxMembers;
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+}
+
+
 /// Configure the pallet-template in pallets/template.
 impl pallet_aadhaar::Config for Runtime {
 	type Event = Event;
-	type RegisterOrigin = EnsureRoot<AccountId>;
+	type RegisterOrigin = EnsureMember<AccountId, AkshayaCouncilCollective>;
 }
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -288,6 +316,7 @@ construct_runtime!(
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
 		// Include the custom logic from the pallet-template in the runtime.
+		AkshayaCouncil: pallet_collective::<Instance1>,
 		Aadhaar: pallet_aadhaar,
 	}
 );

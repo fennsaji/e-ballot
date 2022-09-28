@@ -239,7 +239,7 @@ impl<T: Config + Send + Sync + scale_info::TypeInfo> SignedExtension for CheckAc
 		info: &DispatchInfoOf<Self::Call>,
 		_len: usize,
 	) -> TransactionValidity {
-		if RLookup::<T>::contains_key(who){
+		if RLookup::<T>::contains_key(who) {
 			Ok(ValidTransaction {
 				priority: info.weight as TransactionPriority,
 				longevity: TransactionLongevity::max_value(),
@@ -253,11 +253,18 @@ impl<T: Config + Send + Sync + scale_info::TypeInfo> SignedExtension for CheckAc
 
 	fn pre_dispatch(
 		self,
-		_who: &Self::AccountId,
-		_call: &Self::Call,
-		_info: &DispatchInfoOf<Self::Call>,
-		_len: usize,
+		who: &Self::AccountId,
+		call: &Self::Call,
+		info: &DispatchInfoOf<Self::Call>,
+		len: usize,
 	) -> Result<Self::Pre, TransactionValidityError> {
+		Self::validate(
+			&self,
+			who,
+			call,
+			info,
+			len
+		)?;
 		Ok(())
 	}
 }
