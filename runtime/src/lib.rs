@@ -291,11 +291,36 @@ impl pallet_collective::Config<AkshayaCouncilCollective> for Runtime {
 	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
 }
 
+use pallet_collective::Instance2 as ElectionCommissionCollective;
+
+parameter_types! {
+	pub const ElectionCommissionMotionDuration: BlockNumber = 5 * DAYS;
+	pub const ElectionCommissionMaxProposals: u32 = 100;
+	pub const ElectionCommissionMaxMembers: u32 = 100;
+}
+
+impl pallet_collective::Config<ElectionCommissionCollective> for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+	type MotionDuration = ElectionCommissionMotionDuration;
+	type MaxProposals = ElectionCommissionMaxProposals;
+	type MaxMembers = ElectionCommissionMaxMembers;
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+}
+
 
 /// Configure the pallet-template in pallets/template.
 impl pallet_aadhaar::Config for Runtime {
 	type Event = Event;
 	type RegisterOrigin = EnsureMember<AccountId, AkshayaCouncilCollective>;
+}
+
+/// Configure the pallet-template in pallets/template.
+impl pallet_ballot::Config for Runtime {
+	type Event = Event;
+	type ElectionCommissionOrigin = EnsureMember<AccountId, ElectionCommissionCollective>;
 }
 
 
@@ -317,7 +342,9 @@ construct_runtime!(
 		Sudo: pallet_sudo,
 		// Include the custom logic from the pallet-template in the runtime.
 		AkshayaCouncil: pallet_collective::<Instance1>,
+		ElectionCommission: pallet_collective::<Instance2>,
 		Aadhaar: pallet_aadhaar,
+		Ballot: pallet_ballot,
 	}
 );
 

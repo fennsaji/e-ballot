@@ -1,6 +1,6 @@
 use e_ballot_runtime::{
 	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
-	SystemConfig, AadhaarConfig, AkshayaCouncilConfig, WASM_BINARY,
+	SystemConfig, AadhaarConfig, AkshayaCouncilConfig, ElectionCommissionConfig, WASM_BINARY,
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -175,6 +175,10 @@ fn testnet_genesis(
 			phantom: Default::default(),
 		},
 		akshaya_council: AkshayaCouncilConfig {
+			members: vec![endowed_accounts[0].clone()],
+			phantom: Default::default(),
+		},
+		election_commission: ElectionCommissionConfig {
 			members: vec![endowed_accounts[0].clone()],
 			phantom: Default::default(),
 		},

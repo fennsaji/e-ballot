@@ -193,6 +193,16 @@ pub mod pallet {
 			Ok(())
 		}
 
+		pub fn does_aadhaar_exists(account_id: &T::AccountId) -> bool {
+			match Self::get_aadhaar_id(account_id) {
+				Some(_) => true,
+				None => false
+			}
+		}
+		
+		pub fn get_aadhaar_id(account_id: &T::AccountId) -> Option<AadhaarId> {
+			RLookup::<T>::get(account_id)
+		}
 	}
 }
 
