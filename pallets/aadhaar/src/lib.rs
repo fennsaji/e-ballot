@@ -247,7 +247,7 @@ impl<T: Config + Send + Sync + scale_info::TypeInfo> SignedExtension for CheckAc
 				..Default::default()
 			})
 		} else {
-			Err(InvalidTransaction::Custom(230).into())
+			Err(InvalidTransaction::Custom(0).into())
 		}
 	}
 
