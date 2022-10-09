@@ -1,5 +1,14 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+/// Terminology
+/// Aadhar Id - Unique Identity number
+/// 
+/// This pallet allows to assign aadhar id to an account number
+/// It also implements SignedExtension trait which restricts anyone 
+/// without registered aadhar id in this pallet to call any 
+/// extrinsics in the blockchain
+
+
 pub mod types;
 
 pub use pallet::*;
@@ -31,29 +40,30 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		/// Validator Origin
+		/// Origin who will register aadhaar
 		type RegisterOrigin: EnsureOrigin<Self::Origin>;
 	}
 
+	/// List of aadhaars added in the blockchain
 	#[pallet::storage]
 	#[pallet::getter(fn aadhaar)]
 	pub(crate) type Aadhaars<T: Config> = StorageMap<_, Blake2_128Concat, AadhaarId, Aadhaar<T::AccountId>, OptionQuery>;
 
-	// map to enable lookup from AadhaarId to account id
+	// Map to enable lookup from AadhaarId to account id
 	#[pallet::storage]
 	pub type Lookup<T: Config> = StorageMap<_, Blake2_128Concat, AadhaarId, T::AccountId, OptionQuery>;
 
-	// map to enable reverse lookup
+	// Map to enable reverse lookup
 	#[pallet::storage]
 	pub type RLookup<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, AadhaarId, OptionQuery>;
 
 
+	/// Inititalise Aadhars
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub initial_aadhaars: Vec<(AadhaarId, T::AccountId)>,
@@ -110,6 +120,7 @@ pub mod pallet {
 			// Check if origin is a from a validator
 			T::RegisterOrigin::ensure_origin(origin)?;
 			
+			// Add aadhaar and it's lookup to storage
 			Self::do_register_aadhaar(&account_id, aadhaar_id)?;
 
 			// Emit an event.
@@ -174,6 +185,7 @@ pub mod pallet {
 				Error::<T>::AccountIdRegistered
 			);
 
+			// Insert Aadhaar to storage
 			Aadhaars::<T>::insert(
 				aadhaar_id,
 				Aadhaar {
@@ -182,11 +194,13 @@ pub mod pallet {
 				},
 			);
 
+			// Insert Lookup between aadhaar id and account id to storage
 			Lookup::<T>::insert(
 				aadhaar_id,
 				account_id,
 			);
 
+			// Insert RLookup between account id and aadhaar id to storage
 			RLookup::<T>::insert(
 				account_id,
 				aadhaar_id,

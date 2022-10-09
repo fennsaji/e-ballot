@@ -1,5 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+/// This pallet allows to cast vote on a voting session
+/// Anyone with Election Commission Origin can start a 
+/// voting session by calling start_voting and then
+/// add candidates. Then users can vote for candidates
+
+
 use frame_support::{
     codec::{ Decode, Encode, MaxEncodedLen },
 };
@@ -23,16 +29,17 @@ pub mod pallet {
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
-	/// Configure the pallet by specifying the parameters and types on which it depends.
+
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_aadhaar::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		/// Validator Origin
+		/// Origin who manage voting session
 		type ElectionCommissionOrigin: EnsureOrigin<Self::Origin, Success = Self::AccountId>;
 	}
 
+	/// Stores the current index of voting session
 	#[pallet::type_value]
 	pub fn VoteIndexDefault() -> VoteIndex { 0 }
 	#[pallet::storage]
@@ -40,11 +47,13 @@ pub mod pallet {
 	pub type CurrentVoteIndex<T> = StorageValue<Value = VoteIndex, OnEmpty = VoteIndexDefault, QueryKind = ValueQuery>;
 
 
+	/// It stores the chief commissioner/ admin of the given vote index
 	#[pallet::storage]
 	#[pallet::getter(fn chief_commissioner)]
 	pub type ChiefCommissioner<T> = StorageMap<_, Blake2_128Concat, VoteIndex, AadhaarId>;
 
 
+	/// It stores voting state (Idle, Voting and Ended) of given vote index
 	#[pallet::type_value]
 	pub fn StateDefault() -> VoteState { VoteState::Idle }
 	#[pallet::storage]
@@ -52,10 +61,13 @@ pub mod pallet {
 	pub type VotingState<T> = StorageMap<Hasher = Blake2_128Concat, Key = VoteIndex, Value = VoteState, OnEmpty = StateDefault, QueryKind = ValueQuery>;
 
 
+	/// It stores candidates and their votes in the given voting session
 	#[pallet::storage]
 	#[pallet::getter(fn candidates)]
 	pub type Candidates<T> = StorageDoubleMap<_, Blake2_128Concat, VoteIndex, Blake2_128Concat, AadhaarId, Candidate, ValueQuery>;
 
+
+	/// It stores if votes were casted on an voting session by a voter id
 	#[pallet::storage]
 	#[pallet::getter(fn votes)]
 	pub type Votes<T> = StorageDoubleMap<_, Blake2_128Concat, VoteIndex, Blake2_128Concat, AadhaarId, bool, ValueQuery>;
@@ -96,7 +108,9 @@ pub mod pallet {
 			// Check if origin is a from a validator
 			let account_id = T::ElectionCommissionOrigin::ensure_origin(origin)?;
 
+			// Create voting session and set status to Voting
 			let (aadhaar_id, vote_index) = Self::do_start_voting(&account_id)?;
+
 			// Emit an event.
 			Self::deposit_event(Event::VotingStarted { aadhaar_id, vote_index });
 
@@ -109,7 +123,9 @@ pub mod pallet {
 			// Check if origin is a from a validator
 			let account_id = T::ElectionCommissionOrigin::ensure_origin(origin)?;
 
+			// Change voting state to ended
 			let (aadhaar_id, vote_index) = Self::do_stop_voting(&account_id, vote_index)?;
+
 			// Emit an event.
 			Self::deposit_event(Event::VotingStarted { aadhaar_id, vote_index });
 
@@ -122,6 +138,7 @@ pub mod pallet {
 			// Check if origin is a from a validator
 			let account_id = T::ElectionCommissionOrigin::ensure_origin(origin)?;
 
+			// Set voting state to Idle and remove candidates and votes
 			let (aadhaar_id, vote_index) = Self::do_reset_voting(&account_id, vote_index)?;
 
 			// Emit an event.
@@ -136,6 +153,7 @@ pub mod pallet {
 			// Check if origin is a from a validator
 			T::ElectionCommissionOrigin::ensure_origin(origin)?;
 
+			// Add Candidates to the voting session
 			Self::do_add_candidates(vote_index, &candidates)?;
 
 			// Emit an event.
@@ -150,6 +168,7 @@ pub mod pallet {
 			// Check if origin is a from a validator
 			let account_id = ensure_signed(origin)?;
 
+			// Cast vote on a candidate on given voting session
 			Self::do_vote(&account_id, vote_index, candidate)?;
 
 			// Emit an event.
@@ -163,7 +182,7 @@ pub mod pallet {
 
 	impl<T: Config> Pallet<T> {
 
-		/// Start Voting 
+		/// Create voting session and set status to Voting
 		pub fn do_start_voting(account_id: &T::AccountId) -> Result<(AadhaarId, VoteIndex), DispatchError> {
 
 			let aadhaar_id = AadhaarPallet::<T>::get_aadhaar_id(&account_id);
@@ -175,7 +194,7 @@ pub mod pallet {
 			Ok((aadhaar_id.unwrap(), vote_index))
 		}
 
-		/// Stop Voting
+		/// Set Voting status of a voting session to Ended
 		pub fn do_stop_voting(account_id: &T::AccountId, vote_index: VoteIndex) -> Result<(AadhaarId, VoteIndex), DispatchError> {
 
 			ensure!(VotingState::<T>::get(vote_index) == VoteState::Voting, Error::<T>::VotingNotActive);
@@ -186,13 +205,16 @@ pub mod pallet {
 			Ok((aadhaar_id, vote_index))
 		}
 
-		/// Reset Voting
+		/// Remove all voting session data and set voting status to ended
 		pub fn do_reset_voting(account_id: &T::AccountId, vote_index: VoteIndex) -> Result<(AadhaarId, VoteIndex), DispatchError> {
 
 			let aadhaar_id = AadhaarPallet::<T>::get_aadhaar_id(&account_id).unwrap();
 			VotingState::<T>::set(vote_index, VoteState::Idle);
 			ChiefCommissioner::<T>::remove(vote_index);
-			let limit = 20; // No of record to delete
+
+			// No of record to delete 
+			//TODO: To be updated to a config and set limit on max candidates
+			let limit = 20; 
 			let _ = Candidates::<T>::clear_prefix(vote_index, limit, None);
 			let _ = Votes::<T>::clear_prefix(vote_index, limit, None);
 
@@ -215,13 +237,14 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// Vote on candidate
+		/// Cast vote on candidate
 		pub fn do_vote(voter_acc: &T::AccountId, vote_index: VoteIndex, candidate_id: AadhaarId) -> DispatchResult {
 			let voter_id = AadhaarPallet::<T>::get_aadhaar_id(&voter_acc).unwrap();
 
+			// Ensure voting session exists and is active and user didn't vote already
 			ensure!(Candidates::<T>::contains_key(vote_index, candidate_id), Error::<T>::VoteSessionNotFound);
-			ensure!(Votes::<T>::contains_key(vote_index, voter_id), Error::<T>::VoteAlreadyCast);
 			ensure!(VotingState::<T>::get(vote_index) == VoteState::Voting, Error::<T>::VotingNotActive);
+			ensure!(Votes::<T>::contains_key(vote_index, voter_id), Error::<T>::VoteAlreadyCast);
 
 			let mut candidate: Candidate = Candidates::<T>::get(vote_index, candidate_id);
 			candidate.vote_count = candidate.vote_count + 1;

@@ -340,9 +340,14 @@ construct_runtime!(
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
-		// Include the custom logic from the pallet-template in the runtime.
+		
+		// Council for Akshaya and Election Commission
+		// Akshaya - Council who can call aadhaar pallet extrinsics
 		AkshayaCouncil: pallet_collective::<Instance1>,
+		// Election Commission council is responsible for all calls in ballot pallet
 		ElectionCommission: pallet_collective::<Instance2>,
+
+		// E Ballot Custom Pallets
 		Aadhaar: pallet_aadhaar,
 		Ballot: pallet_ballot,
 	}
