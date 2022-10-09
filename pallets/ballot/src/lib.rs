@@ -17,6 +17,13 @@ use sp_std::prelude::*;
 use crate::types::*;
 
 mod types;
+
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+
+
 pub use pallet::*;
 
 #[frame_support::pallet]
@@ -244,7 +251,7 @@ pub mod pallet {
 			// Ensure voting session exists and is active and user didn't vote already
 			ensure!(Candidates::<T>::contains_key(vote_index, candidate_id), Error::<T>::VoteSessionNotFound);
 			ensure!(VotingState::<T>::get(vote_index) == VoteState::Voting, Error::<T>::VotingNotActive);
-			ensure!(Votes::<T>::contains_key(vote_index, voter_id), Error::<T>::VoteAlreadyCast);
+			ensure!(Votes::<T>::contains_key(vote_index, voter_id) == false, Error::<T>::VoteAlreadyCast);
 
 			let mut candidate: Candidate = Candidates::<T>::get(vote_index, candidate_id);
 			candidate.vote_count = candidate.vote_count + 1;
