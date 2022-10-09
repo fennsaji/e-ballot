@@ -11,6 +11,11 @@
 
 pub mod types;
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+
 pub use pallet::*;
 
 use frame_support::{
