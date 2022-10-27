@@ -11,12 +11,12 @@ use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
-use system::EnsureSigned;
+use system::{EnsureSigned};
 
 pub const INITIAL_USER_ACCOUNT: u64 = 1;
 pub const INITIAL_USER_AADHAAR: AadhaarId = *b"1111111111111111";
 
-pub type AccounId = u64;
+pub type AccountId = u64;
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
@@ -43,7 +43,7 @@ impl system::Config for Test {
 	type BlockNumber = u64;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = AccounId;
+	type AccountId = AccountId;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
 	type Event = Event;

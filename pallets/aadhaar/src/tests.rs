@@ -22,7 +22,7 @@ fn test_genesis_worked() {
 #[test]
 fn test_register_aadhaar() {
 	new_test_ext().execute_with(|| {
-        let new_account_id: AccounId = 2;
+        let new_account_id: AccountId = 2;
         let new_aadhaar_id: AadhaarId = *b"2222222222222222";
 
         assert_ok!(Aadhaar::register_aadhaar(
@@ -40,7 +40,7 @@ fn test_register_aadhaar() {
 #[test]
 fn test_register_existing_aadhaar_fails() {
     new_test_ext().execute_with(|| {
-        let user_account_id: AccounId = 2;
+        let user_account_id: AccountId = 2;
         let user_aadhaar_id = *b"2222222222222222";
 
         assert_ok!(Aadhaar::register_aadhaar(
@@ -68,7 +68,7 @@ fn test_register_existing_aadhaar_fails() {
 #[test]
 fn test_register_existing_account_id_fails() {
     new_test_ext().execute_with(|| {
-        let user_account_id: AccounId = 2;
+        let user_account_id: AccountId = 2;
         let user_aadhaar_id = *b"2222222222222222";
 
         assert_ok!(Aadhaar::register_aadhaar(
